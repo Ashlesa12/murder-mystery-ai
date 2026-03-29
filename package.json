@@ -1,0 +1,12 @@
+{
+  "name": "murder-mystery",
+  "version": "1.0.0",
+  "description": "AI-powered Murder Mystery detective game",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

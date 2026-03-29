@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Murder Mystery — Detective Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ========== RAIN PARTICLES ========== -->
+    <div id="rain-container" aria-hidden="true"></div>
+
+    <!-- ========== LOADING OVERLAY ========== -->
+    <div id="loading-overlay" class="overlay hidden">
+        <div class="loading-content">
+            <div class="magnifying-glass">🔍</div>
+            <div id="loading-steps" class="loading-steps"></div>
+            <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+        </div>
+    </div>
+
+    <!-- ========== SCREEN 1: TITLE ========== -->
+    <div id="screen-title" class="screen active">
+        <div class="title-content">
+            <div class="badge">🕵️ DETECTIVE AGENCY</div>
+            <h1 class="game-title">MURDER<br><span>MYSTERY</span></h1>
+            <p class="tagline">Every case is unique. Every suspect lies.<br>Trust no one.</p>
+            <div class="title-actions">
+                <button class="btn btn-primary btn-glow" id="btn-new-case">
+                    <span class="btn-icon">🔍</span> NEW CASE
+                </button>
+                <button class="btn btn-secondary" id="btn-demo-mode">
+                    <span class="btn-icon">🎮</span> DEMO MODE
+                </button>
+            </div>
+            <div class="title-footer">
+                <button class="btn btn-ghost" id="btn-history">📜 Case History</button>
+                <button class="btn btn-ghost" id="btn-settings">⚙️ Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== SCREEN 2: CRIME SCENE ========== -->
+    <div id="screen-crime" class="screen">
+        <header class="game-header">
+            <div class="header-left">
+                <span class="case-badge">CASE #<span id="case-number">001</span></span>
+            </div>
+            <div class="header-right">
+                <div class="question-counter" id="q-counter-1">
+                    ❓ <span id="q-remaining-1">15</span> questions left
+                </div>
+            </div>
+        </header>
+
+        <div class="crime-layout">
+            <!-- Scene Description -->
+            <div class="scene-panel glass-card">
+                <h2 class="section-title">📍 Crime Scene</h2>
+                <h3 id="crime-location" class="location-name"></h3>
+                <div id="scene-text" class="scene-description"></div>
+                <div class="victim-info">
+                    <div class="info-chip"><span class="label">Victim</span><span id="victim-name" class="value"></span></div>
+                    <div class="info-chip"><span class="label">Time</span><span id="death-time" class="value"></span></div>
+                    <div class="info-chip"><span class="label">Weapon</span><span id="murder-weapon" class="value"></span></div>
+                </div>
+            </div>
+
+            <!-- Evidence Board -->
+            <div class="clue-panel glass-card">
+                <h2 class="section-title">📌 Evidence Board</h2>
+                <div id="clue-board" class="corkboard"></div>
+            </div>
+        </div>
+
+        <!-- Suspect Cards -->
+        <div class="suspect-section">
+            <h2 class="section-title center">🔎 Interrogate a Suspect</h2>
+            <div id="suspect-cards" class="suspect-cards"></div>
+        </div>
+
+        <div class="scene-footer">
+            <button class="btn btn-danger" id="btn-accuse">⚖️ MAKE YOUR ACCUSATION</button>
+        </div>
+    </div>
+
+    <!-- ========== SCREEN 3: INTERROGATION ========== -->
+    <div id="screen-interrogation" class="screen">
+        <header class="game-header">
+            <div class="header-left">
+                <button class="btn btn-ghost" id="btn-back-scene">← Back to Scene</button>
+            </div>
+            <div class="header-center">
+                <span id="interrogation-title" class="interrogation-suspect-name"></span>
+            </div>
+            <div class="header-right">
+                <div id="timer-section" class="hidden">
+                    <div class="timer-bar-container"><div class="timer-bar-fill" id="timer-fill"></div></div>
+                    <div class="timer-text" id="timer-text">60s</div>
+                </div>
+                <div class="question-counter" id="q-counter-2">
+                    ❓ <span id="q-remaining-2">15</span> left
+                </div>
+            </div>
+        </header>
+
+        <div class="interrogation-layout">
+            <!-- Suspect Profile Sidebar -->
+            <aside class="suspect-sidebar glass-card">
+                <div id="suspect-avatar" class="avatar-large"></div>
+                <h3 id="suspect-name-display"></h3>
+                <p id="suspect-personality" class="personality-text"></p>
+                <div class="alibi-card">
+                    <span class="alibi-label">Their Alibi:</span>
+                    <p id="suspect-alibi"></p>
+                </div>
+                <button class="btn btn-warning" id="btn-confront" style="display:none;">
+                    ⚔️ CONFRONT
+                </button>
+                <!-- Pressure / Nervousness Meter -->
+                <div class="pressure-meter" id="pressure-meter">
+                    <div class="pressure-label">
+                        <span>Nervousness</span>
+                        <span id="pressure-pct">0%</span>
+                    </div>
+                    <div class="pressure-bar"><div class="pressure-fill" id="pressure-fill"></div></div>
+                </div>
+                <!-- Side clues -->
+                <div class="side-clues">
+                    <h4>📎 Clues Collected</h4>
+                    <div id="side-clue-list"></div>
+                </div>
+            </aside>
+
+            <!-- Chat Area -->
+            <main class="chat-area">
+                <div id="chat-messages" class="chat-messages">
+                    <div class="chat-welcome">
+                        <p>The suspect sits across from you under the harsh lamp light...</p>
+                        <p class="hint">Type your questions below. Choose wisely — questions are limited.</p>
+                    </div>
+                </div>
+                <div class="chat-input-bar">
+                    <input type="text" id="question-input" class="chat-input"
+                           placeholder="Ask your question..." autocomplete="off" />
+                    <button class="btn btn-primary" id="btn-ask">
+                        ASK <span class="key-hint">↵</span>
+                    </button>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ========== SCREEN 4: ACCUSATION ========== -->
+    <div id="screen-accusation" class="screen">
+        <div class="accusation-content">
+            <div id="accusation-phase-choose">
+                <h1 class="accusation-title">WHO IS THE KILLER?</h1>
+                <p class="accusation-subtitle">Choose carefully, detective. There's no going back.</p>
+                <div id="accusation-cards" class="accusation-cards"></div>
+            </div>
+
+            <div id="accusation-phase-result" class="hidden">
+                <div id="result-icon" class="result-icon"></div>
+                <h1 id="result-title" class="result-title"></h1>
+                <p id="result-text" class="result-text"></p>
+                <div id="result-explanation" class="result-explanation glass-card"></div>
+                <div id="score-display" class="score-display"></div>
+                <div class="result-actions">
+                    <button class="btn btn-primary btn-glow" id="btn-play-again">🔄 PLAY AGAIN</button>
+                    <button class="btn btn-ghost" id="btn-back-title">🏠 Main Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL: SETTINGS ========== -->
+    <div id="modal-settings" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h2>⚙️ Settings</h2>
+                <button class="btn-close" data-close-modal="modal-settings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="api-key-input">NVIDIA NIM API Key</label>
+                    <input type="password" id="api-key-input" placeholder="nvapi-..."
+                           class="form-input" />
+                    <p class="form-hint">Get your free key at <a href="https://build.nvidia.com" target="_blank" rel="noopener">build.nvidia.com</a></p>
+                </div>
+                <div class="form-group">
+                    <label>AI Model</label>
+                    <div class="model-selector">
+                        <select id="model-select" class="form-input">
+                            <option value="" disabled>— Pick a model or type custom below —</option>
+                            <optgroup label="Popular Models">
+                                <option value="meta/llama-3.3-70b-instruct">Llama 3.3 70B Instruct</option>
+                                <option value="meta/llama-3.1-405b-instruct">Llama 3.1 405B Instruct</option>
+                                <option value="meta/llama-3.1-70b-instruct">Llama 3.1 70B Instruct</option>
+                                <option value="meta/llama-3.1-8b-instruct">Llama 3.1 8B Instruct (Fast)</option>
+                                <option value="google/gemma-2-27b-it">Gemma 2 27B</option>
+                                <option value="mistralai/mistral-large-2-instruct">Mistral Large 2</option>
+                                <option value="mistralai/mixtral-8x22b-instruct-v0.1">Mixtral 8x22B</option>
+                                <option value="nvidia/nemotron-70b-instruct">Nemotron 70B</option>
+                                <option value="deepseek-ai/deepseek-r1">DeepSeek R1</option>
+                                <option value="qwen/qwen2.5-72b-instruct">Qwen 2.5 72B</option>
+                            </optgroup>
+                            <optgroup label="Custom">
+                                <option value="__custom__">✏️ Enter custom model ID...</option>
+                            </optgroup>
+                        </select>
+                        <div id="custom-model-row" class="custom-model-row hidden">
+                            <input type="text" id="custom-model-input" class="form-input"
+                                   placeholder="e.g. nvidia/llama-3.1-nemotron-70b-instruct" />
+                        </div>
+                        <button class="btn btn-ghost btn-sm" id="btn-fetch-models" title="Fetch all available models from NVIDIA">
+                            🔄 Fetch Available Models
+                        </button>
+                        <div id="model-fetch-status" class="form-hint"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="questions-input">Questions per game</label>
+                    <input type="number" id="questions-input" value="15" min="5" max="30"
+                           class="form-input" />
+                </div>
+                <div class="form-group">
+                    <label>Difficulty</label>
+                    <div class="difficulty-selector" id="difficulty-selector">
+                        <div class="difficulty-option selected" data-difficulty="easy">
+                            <span class="diff-icon">🟢</span>
+                            <span class="diff-name">Easy</span>
+                            <span class="diff-desc">20 Q, all clues visible</span>
+                        </div>
+                        <div class="difficulty-option" data-difficulty="hard">
+                            <span class="diff-icon">🟡</span>
+                            <span class="diff-name">Hard</span>
+                            <span class="diff-desc">10 Q, timed, clues hidden</span>
+                        </div>
+                        <div class="difficulty-option" data-difficulty="nightmare">
+                            <span class="diff-icon">🔴</span>
+                            <span class="diff-name">Nightmare</span>
+                            <span class="diff-desc">7 Q, timed, red herrings</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="connection-status" class="connection-status"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-test-connection">🔌 Test Connection</button>
+                <button class="btn btn-primary" id="btn-save-settings">💾 Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL: HISTORY ========== -->
+    <div id="modal-history" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h2>📜 Case History</h2>
+                <button class="btn-close" data-close-modal="modal-history">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="history-list" class="history-list">
+                    <p class="empty-state">No cases solved yet. Get to work, detective!</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" id="btn-clear-history">🗑️ Clear History</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL: CONFRONT ========== -->
+    <div id="modal-confront" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-wide glass-card">
+            <div class="modal-header">
+                <h2>⚔️ Confrontation</h2>
+                <button class="btn-close" data-close-modal="modal-confront">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="confront-instruction">Select a clue to confront <strong id="confront-suspect-name"></strong> with:</p>
+                <div id="confront-clues" class="confront-clue-list"></div>
+                <div id="confront-result" class="confront-result hidden">
+                    <div class="confront-response glass-card">
+                        <div id="confront-avatar" class="avatar-small"></div>
+                        <div id="confront-text"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" id="btn-do-confront" disabled>⚔️ Confront!</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+
+    <!-- Sound toggle -->
+    <button id="sound-toggle" class="sound-toggle" title="Toggle sound">🔊</button>
+</body>
+</html>

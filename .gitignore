@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Environment variables (API keys, secrets)
+.env
+.env.local
+.env.production
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Editor files
+.vscode/
+*.swp
+*.swo
+
+# Logs
+npm-debug.log*
+*.log
