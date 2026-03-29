@@ -897,6 +897,9 @@ async function askQuestion() {
     chatEl.appendChild(typing);
     chatEl.scrollTop = chatEl.scrollHeight;
 
+    // Pause timer while waiting for AI response
+    pauseTimer();
+
     let answer;
     try {
         if (gameState.demoMode) {
@@ -913,6 +916,9 @@ async function askQuestion() {
 
     // Remove typing indicator
     typing.remove();
+
+    // Resume timer now that the AI has responded
+    resumeTimer();
 
     // Add suspect bubble
     appendChatBubble(chatEl, def.name, answer, false, def.color);
@@ -1064,6 +1070,55 @@ function resetTimer() {
         if (gameState.timerSeconds <= 0) {
             clearTimer();
             // Auto-skip: lose a question
+            if (gameState.questionsLeft > 0) {
+                gameState.questionsLeft--;
+                updateQuestionCounters();
+                const chatEl = document.getElementById('chat-messages');
+                const timeoutMsg = document.createElement('div');
+                timeoutMsg.className = 'chat-bubble suspect';
+                timeoutMsg.innerHTML = '<span class="sender">⏰ TIME UP</span>You took too long, detective. The suspect smirks.';
+                chatEl.appendChild(timeoutMsg);
+                chatEl.scrollTop = chatEl.scrollHeight;
+            }
+            if (gameState.questionsLeft > 0) {
+                resetTimer();
+            } else {
+                setTimeout(() => {
+                    const forceAccuse = confirm('No questions left! Time to make your accusation.');
+                    if (forceAccuse) showAccusation();
+                }, 500);
+            }
+        }
+    }, 1000);
+}
+
+function pauseTimer() {
+    if (gameState.timer) {
+        clearInterval(gameState.timer);
+        gameState.timer = null;
+    }
+}
+
+function resumeTimer() {
+    const preset = DIFFICULTY[gameState.difficulty];
+    if (!preset.timed || gameState.timerSeconds <= 0) return;
+
+    const fill = document.getElementById('timer-fill');
+    const text = document.getElementById('timer-text');
+
+    gameState.timer = setInterval(() => {
+        gameState.timerSeconds--;
+        const pct = (gameState.timerSeconds / preset.timerSec) * 100;
+        fill.style.width = pct + '%';
+        text.textContent = gameState.timerSeconds + 's';
+
+        if (gameState.timerSeconds <= 10) {
+            fill.classList.add('urgent');
+            SFX.play('tick');
+        }
+
+        if (gameState.timerSeconds <= 0) {
+            clearTimer();
             if (gameState.questionsLeft > 0) {
                 gameState.questionsLeft--;
                 updateQuestionCounters();
